@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DeliverEZ - Track Your Package</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #7F00FF, #E100FF);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    h1 {
+      color: #7F00FF;
+      margin-bottom: 10px;
+    }
+
+    p.subtitle {
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #666;
+    }
+
+    input {
+      padding: 12px 16px;
+      width: 100%;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background: #7F00FF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #5e00c8;
+    }
+
+    .spinner {
+      margin: 20px auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #7F00FF;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #result {
+      margin-top: 30px;
+      text-align: left;
+    }
+
+    .card {
+      background: #f9f9f9;
+      padding: 20px;
+      border-left: 6px solid #7F00FF;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .card p {
+      margin: 8px 0;
+      font-size: 15px;
+    }
+
+    .card p strong {
+      display: inline-block;
+      width: 140px;
+      color: #333;
+    }
+
+    .status {
+      font-weight: bold;
+      color: #E100FF;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      .card p strong {
+        width: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DeliverEZ</h1>
+    <p class="subtitle">Track your delivery by entering the tracking code below:</p>
+    <input type="text" id="code" placeholder="Enter your tracking code " />
+    <br>
+    <button onclick="track()">Track</button>
+    <div class="spinner" id="loader"></div>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    async function track() {
+      const code = document.getElementById("code").value.trim();
+      const resultBox = document.getElementById("result");
+      const loader = document.getElementById("loader");
+
+      resultBox.innerHTML = "";
+      loader.style.display = "block";
+
+      if (!code) {
+        alert("Please enter a valid tracking code.");
+        loader.style.display = "none";
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          "https://script.google.com/macros/s/AKfycbxoVgFRBym8sAl-FCQBn4mK59BXr68897XGO-kPpOMw5wDSfrVAA_Z4qFGkYch69JBArQ/exec?code=" + code
+        );
+        const data = await res.json();
+
+        loader.style.display = "none";
+
+        if (data && data.Name) {
+          resultBox.innerHTML = `
+            <div class="card">
+              <p><strong>Item Name:</strong> ${data.Name}</p>
+              <p><strong>Type:</strong> ${data.Type}</p>
+              <p><strong>Exact Type:</strong> ${data.ExactType}</p>
+              <p><strong>Sender:</strong> ${data.SenderName}</p>
+              <p><strong>Receiver:</strong> ${data.ReceiverName}</p>
+              <p><strong>Address:</strong> ${data.ReceiverAddress}</p>
+              <p><strong>Status:</strong> <span class="status">${data.Status}</span></p>
+            </div>
+          `;
+        } else {
+          resultBox.innerHTML = `
+            <div class="card">
+              <p><strong>No item found for code:</strong> ${code}</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        loader.style.display = "none";
+        resultBox.innerHTML = `
+          <div class="card">
+            <p><strong>Error:</strong> Unable to fetch data. Please try again later.</p>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
